@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Global variables
+user_name="kali"
+
 # Styling variables
 GREEN=`tput bold && tput setaf 2`
 RED=`tput bold && tput setaf 1`
@@ -78,11 +81,6 @@ INFO "[INF] Installing openvpn..."
 sudo apt-get install -y openvpn
 CHECK_INSTALL openvpn
 
-# OpenVPN
-INFO "[INF] Installing openvpn..."
-sudo apt-get install -y openvpn
-CHECK_INSTALL openvpn
-
 # Remmina
 INFO "[INF] Installing Remmina..."
 sudo apt-add-repository ppa:remmina-ppa-team/remmina-next
@@ -91,9 +89,42 @@ CHECK_INSTALL remmina
 
 # -- Network --
 
-# -- Browser QOL --
+# -- Firefox configuration --
+# Location of Firefox profile directory (replace with your actual path)
+firefox_path="~/.mozilla/firefox/" + user_name
 
+# Bookmark lists
+training_bookmarks=(
+	"https://www.notion.so/mcclew/|Notion"
+	"https://tryhackme.com/|TryHackMe"
+	"https://academy.tcm-sec.com/|TCM Security"
+)
 
-# -- Nice to haves --
+tool_bookmarks=(
+	"https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md|PayloadsAllTheThings"
+	"https://github.com/rebootuser/LinEnum/|LinEnum"
+	"https://gtfobins.github.io/|GTFOBins"
+	"https://www.exploit-db.com/|Exploit DB"
+	"https://www.rapid7.com/db/|Rapid7 DB"
+)
 
-# -- Style!? --
+# Create import file
+TMP_BOOKMARKS=$(mktemp)
+
+# Write content to the HTML file
+echo "<html><head><title>Bookmarks</title></head><body>" > "$TMP_BOOKMARKS"
+
+for bookmark in "${training_bookmarks[@]}"; do
+  url=$(echo "$bookmark" | cut -d '|' -f1)
+  name=$(echo "$bookmark" | cut -d '|' -f2-)
+  echo "<a href=\"$url\">$title</a><br>" >> "$TMP_BOOKMARKS"
+done
+
+echo "</body></html>" >> "$TMP_BOOKMARKS"
+
+# Set temporary preference to import bookmarks on startup
+firefox -pref "browser.places.importBookmarksHTML=true" \
+       -pref "browser.bookmarks.file=$TMP_BOOKMARKS"
+
+# Clean up temporary file
+rm "$TMP_BOOKMARKS"
