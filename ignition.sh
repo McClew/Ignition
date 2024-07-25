@@ -70,6 +70,11 @@ sudo apt-get update
 sudo apt-get install -y sublime-text
 CHECK_INSTALL sublime-text
 
+# Parted
+INFO "[INF] Installing parted..."
+sudo apt install -y parted
+CHECK_INSTALL parted
+
 # SQLite3
 INFO "[INF] Installing SQlite3..."
 sudo apt install -y sqlite3
@@ -84,7 +89,7 @@ CHECK_INSTALL openvpn
 # Remmina
 INFO "[INF] Installing Remmina..."
 sudo apt-add-repository ppa:remmina-ppa-team/remmina-next
-sudo apt install remmina remmina-plugin-rdp remmina-plugin-secret
+sudo apt install -y remmina remmina-plugin-rdp remmina-plugin-secret
 CHECK_INSTALL remmina
 
 # -- Network --
