@@ -91,7 +91,7 @@ CHECK_INSTALL remmina
 
 # -- Firefox configuration --
 # Location of Firefox profile directory (replace with your actual path)
-firefox_path="~/.mozilla/firefox/" + user_name
+firefox_path="~/.mozilla/firefox/${user_name}"
 
 # Bookmark lists
 training_bookmarks=(
