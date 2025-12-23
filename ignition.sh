@@ -1,135 +1,159 @@
 #!/bin/bash
 
-# Global variables
-user_name="kali"
+# Ignition Script - Kali Linux Configuration
+# Automates system prep, package installation, shell customization, and more.
 
-# Styling variables
-GREEN=`tput bold && tput setaf 2`
-RED=`tput bold && tput setaf 1`
-BLUE=`tput bold && tput setaf 4`
-RESET=`tput sgr0`
+set -e  # Exit immediately if a command exits with a non-zero status.
 
-# Styling functions
-function SUCCESS()
-{
-	echo -e "\n${GREEN}${1}${RESET}"
-}
+# --- Colours for Output ---
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[0;33m'
+NC='\033[0m' # No Colour
 
-function ERROR()
-{
-	echo -e "\n${RED}${1}${RESET}"
-}
+log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
+log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-function INFO()
-{
-	echo -e "\n${BLUE}${1}${RESET}"
-}
-
-function CHECK_INSTALL()
-{
-	if dpkg-query -W -f='${Status}' $1 2>/dev/null | grep -q "install ok installed"
-	then
-		SUCCESS "[SUC] Package: $1 successfully installed."
-	else
-		ERROR "[ERR] Command not found."
-		ERROR "[ERR] Package: $1 install failed."
-	fi
-
-	return
-}
-
-# Banner
-INFO "||| IGNITION STARTED |||"
-
-# Test for root
-if [ $UID -ne 0 ]
-then
-	ERROR "[ERR] Please run this script as root."
-	exit
-else
-	SUCCESS "[SUC] Logged in as root."
-	INFO "[INF] Starting ignition."
+# Check for sudo
+if [ "$EUID" -ne 0 ]; then
+  log_error "Please run as root (sudo ./ignition.sh)"
+  exit 1
 fi
 
-# -- General --
-INFO "[INF] Updating repositories..."
-sudo apt update
+# --- System Prep & Packages ---
+packages() {
+    log_info "System Preparation & Package Installation..."
 
-# -- Development --
-# Git
-INFO "[INF] Insalling git..."
-sudo apt install -y git
-CHECK_INSTALL git
+    log_info "Updating package lists..."
+    apt update
 
-# Git
-INFO "[INF] Insalling Sublime Text..."
-wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add -
-sudo apt-get install -y apt-transport-https
-echo "deb https://download.sublimetext.com/ apt/stable/" | sudo tee /etc/apt/sources.list.d/sublime-text.list
-sudo apt-get update
-sudo apt-get install -y sublime-text
-CHECK_INSTALL sublime-text
+    log_info "Installing utility packages (grc, colorize, bat)..."
+    apt install -y grc colorize bat
 
-# Parted
-INFO "[INF] Installing parted..."
-sudo apt install -y parted
-CHECK_INSTALL parted
+    # Eza Installation (Debian/Ubuntu)
+    log_info "Installing eza dependencies and setting up repository..."
+    apt install -y gpg sudo
+    
+    mkdir -p /etc/apt/keyrings
+    if [ ! -f /etc/apt/keyrings/gierens.gpg ]; then
+        wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
+    fi
+    
+    echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | tee /etc/apt/sources.list.d/gierens.list
+    chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
+    
+    apt update
+    apt install -y eza
 
-# SQLite3
-INFO "[INF] Installing SQlite3..."
-sudo apt install -y sqlite3
-CHECK_INSTALL sqlite3
+    log_success "Task Complete."
+}
 
-# -- General Tools --
-# OpenVPN
-INFO "[INF] Installing openvpn..."
-sudo apt-get install -y openvpn
-CHECK_INSTALL openvpn
+# --- Oh My Zsh ---
+omz() {
+    log_info "Oh My Zsh Installation..."
+    
+    # Check if ZSH is installed
+    if ! command -v zsh &> /dev/null; then
+        apt install -y zsh
+    fi
 
-# Remmina
-INFO "[INF] Installing Remmina..."
-sudo apt-add-repository ppa:remmina-ppa-team/remmina-next
-sudo apt install -y remmina remmina-plugin-rdp remmina-plugin-secret
-CHECK_INSTALL remmina
+    # Check if OMZ is already installed
+    if [ -d "$HOME/.oh-my-zsh" ]; then
+        log_warn "Oh My Zsh is already installed. Skipping..."
+    else
+        # Unattended install
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    fi
+    
+    log_success "Task Complete."
+}
 
-# -- Network --
+# --- Zsh Plugins ---
+zsh_plugins() {
+    log_info "Installing Zsh Plugins..."
+    
+    ZSH_CUSTOM=${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}
+    
+    # zsh-autosuggestions
+    if [ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]; then
+        git clone https://github.com/zsh-users/zsh-autosuggestions "$ZSH_CUSTOM/plugins/zsh-autosuggestions"
+    else
+        log_warn "zsh-autosuggestions already exists. Skipping clone."
+    fi
+    
+    # zsh-syntax-highlighting
+    if [ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]; then
+        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
+    else
+        log_warn "zsh-syntax-highlighting already exists. Skipping clone."
+    fi
 
-# -- Firefox configuration --
-# Location of Firefox profile directory (replace with your actual path)
-firefox_path="~/.mozilla/firefox/${user_name}"
+    log_success "Task Complete."
+}
 
-# Bookmark lists
-training_bookmarks=(
-	"https://www.notion.so/mcclew/|Notion"
-	"https://tryhackme.com/|TryHackMe"
-	"https://academy.tcm-sec.com/|TCM Security"
-)
+# --- Zsh Configuration ---
+zshrc() {
+    log_info "Configuring .zshrc..."
+    
+    CONFIG_ZSHRC="$(dirname "$0")/configs/.zshrc"
 
-tool_bookmarks=(
-	"https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md|PayloadsAllTheThings"
-	"https://github.com/rebootuser/LinEnum/|LinEnum"
-	"https://gtfobins.github.io/|GTFOBins"
-	"https://www.exploit-db.com/|Exploit DB"
-	"https://www.rapid7.com/db/|Rapid7 DB"
-)
+    if [ ! -f "$CONFIG_ZSHRC" ]; then
+        log_error "Configuration file not found: $CONFIG_ZSHRC"
+        exit 1
+    fi
 
-# Create import file
-TMP_BOOKMARKS=$(mktemp)
+    # Back up existing .zshrc
+    if [ -f "$HOME/.zshrc" ]; then
+        cp "$HOME/.zshrc" "$HOME/.zshrc.bak.$(date +%F-%T)"
+        log_info "Backed up existing .zshrc"
+    fi
 
-# Write content to the HTML file
-echo "<html><head><title>Bookmarks</title></head><body>" > "$TMP_BOOKMARKS"
+    cp "$CONFIG_ZSHRC" "$HOME/.zshrc"
 
-for bookmark in "${training_bookmarks[@]}"; do
-  url=$(echo "$bookmark" | cut -d '|' -f1)
-  name=$(echo "$bookmark" | cut -d '|' -f2-)
-  echo "<a href=\"$url\">$title</a><br>" >> "$TMP_BOOKMARKS"
-done
+    log_success "Task Complete: .zshrc copied from configs."
+}
 
-echo "</body></html>" >> "$TMP_BOOKMARKS"
+# --- TMUX Configuration ---
+tmux() {
+    log_info "Configuring .tmux.conf..."
+    
+    CONFIG_TMUX="$(dirname "$0")/configs/.tmux.conf"
 
-# Set temporary preference to import bookmarks on startup
-firefox -pref "browser.places.importBookmarksHTML=true" \
-       -pref "browser.bookmarks.file=$TMP_BOOKMARKS"
+    if [ ! -f "$CONFIG_TMUX" ]; then
+        log_error "Configuration file not found: $CONFIG_TMUX"
+        exit 1
+    fi
 
-# Clean up temporary file
-rm "$TMP_BOOKMARKS"
+    cp "$CONFIG_TMUX" "$HOME/.tmux.conf"
+
+    log_success "Task Complete: .tmux.conf copied from configs."
+}
+
+# --- Shell Setup ---
+shell_setup() {
+    log_info "Changing default shell to zsh..."
+    chsh -s $(which zsh)
+}
+
+# --- Complete Banner ---
+end_banner() {
+    echo ""
+    log_success "INSTALLATION COMPLETE!"
+    echo "Please restart your terminal or log out and back in for all changes to take full effect."
+}
+
+# --- Main Execution ---
+main() {
+    packages
+    omz
+    zsh_plugins
+    zshrc
+    tmux
+    shell_setup
+    end_banner
+}
+
+main
