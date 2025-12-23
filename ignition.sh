@@ -23,8 +23,17 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-# --- System Prep & Packages ---
-packages() {
+# --- Banner ---
+banner() {
+    echo ""
+    echo "Kali Linux Configuration Script"
+    echo ""
+}
+
+## --- Package Installs ---
+
+# --- System Prep & Utility Packages ---
+system_prep() {
     log_info "System Preparation & Package Installation..."
 
     log_info "Updating package lists..."
@@ -33,7 +42,16 @@ packages() {
     log_info "Installing utility packages (grc, colorize, bat)..."
     apt install -y grc colorize bat
 
-    # Eza Installation (Debian/Ubuntu)
+    log_success "Task Complete: Utility packages installed."
+}
+
+# --- Eza Install ---
+eza_install() {
+    if command -v eza &> /dev/null; then
+        log_warn "eza is already installed. Skipping..."
+        return
+    fi
+
     log_info "Installing eza dependencies and setting up repository..."
     apt install -y gpg sudo
     
@@ -48,11 +66,11 @@ packages() {
     apt update
     apt install -y eza
 
-    log_success "Task Complete."
+    log_success "Task Complete: Eza installed."
 }
 
-# --- Oh My Zsh ---
-omz() {
+# --- Oh My Zsh Install ---
+omz_install() {
     log_info "Oh My Zsh Installation..."
     
     # Check if ZSH is installed
@@ -68,7 +86,7 @@ omz() {
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
     fi
     
-    log_success "Task Complete."
+    log_success "Task Complete: Oh-My-Zsh installed."
 }
 
 # --- Zsh Plugins ---
@@ -91,11 +109,11 @@ zsh_plugins() {
         log_warn "zsh-syntax-highlighting already exists. Skipping clone."
     fi
 
-    log_success "Task Complete."
+    log_success "Task Complete: Zsh plugins installed."
 }
 
 # --- Zsh Configuration ---
-zshrc() {
+zshrc_config() {
     log_info "Configuring .zshrc..."
     
     CONFIG_ZSHRC="$(dirname "$0")/configs/.zshrc"
@@ -117,7 +135,7 @@ zshrc() {
 }
 
 # --- TMUX Configuration ---
-tmux() {
+tmux_config() {
     log_info "Configuring .tmux.conf..."
     
     CONFIG_TMUX="$(dirname "$0")/configs/.tmux.conf"
@@ -136,6 +154,57 @@ tmux() {
 shell_setup() {
     log_info "Changing default shell to zsh..."
     chsh -s $(which zsh)
+    log_success "Task Complete: Default shell changed to zsh."
+}
+
+# --- Git Install ---
+git_install() {
+    log_info "Installing Git..."
+    if command -v git &> /dev/null; then
+        log_warn "Git is already installed. Skipping..."
+    else
+        apt install -y git
+        log_success "Task Complete: Git installed."
+    fi
+}
+
+# --- OpenVPN Install ---
+openvpn_install() {
+    log_info "Installing OpenVPN..."
+    if command -v openvpn &> /dev/null; then
+        log_warn "OpenVPN is already installed. Skipping..."
+    else
+        apt install -y openvpn
+        log_success "Task Complete: OpenVPN installed."
+    fi
+}
+
+## --- Wordlist Downloads ---
+
+# --- Rockyou Download ---
+rockyou_download() {
+    log_info "Downloading Rockyou..."
+    if [ -f "usr/share/wordlists/rockyou.txt" ]; then
+        log_warn "Rockyou is already downloaded. Skipping..."
+    elif [ -f "usr/share/wordlists/rockyou.txt.gz" ]; then
+        log_warn "Rockyou is already downloaded. Unzipping..."
+        gunzip "usr/share/wordlists/rockyou.txt.gz"
+        log_success "Task Complete: Rockyou unzipped."
+    else
+        wget -O "usr/share/wordlists/rockyou.txt" https://github.com/brannondorsey/naive-hashcat/releases/download/data/rockyou.txt
+        log_success "Task Complete: Rockyou downloaded."
+    fi
+}
+
+# --- SecLists Download ---
+seclists_download() {
+    log_info "Downloading SecLists..."
+    if [ -d "/usr/share/wordlists/SecLists" ]; then
+        log_warn "SecLists is already downloaded. Skipping..."
+    else
+        git clone https://github.com/danielmiessler/SecLists.git /usr/share/wordlists/SecLists
+        log_success "Task Complete: SecLists downloaded."
+    fi
 }
 
 # --- Complete Banner ---
@@ -147,12 +216,22 @@ end_banner() {
 
 # --- Main Execution ---
 main() {
-    packages
-    omz
+    # --- Banner ---
+    banner
+    # --- Package Installs ---
+    system_prep
+    eza_install
+    omz_install
     zsh_plugins
-    zshrc
-    tmux
+    zshrc_config
+    tmux_config
     shell_setup
+    git_install
+    openvpn_install
+    # --- Wordlist Downloads ---
+    rockyou_download
+    seclists_download
+    # --- Complete Banner ---
     end_banner
 }
 

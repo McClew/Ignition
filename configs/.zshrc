@@ -46,3 +46,16 @@ alias la='eza -la --color=always --group-directories-first'
 if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
   exec tmux
 fi
+
+# --- Custom Prompt ---
+setopt PROMPT_SUBST
+
+# tun0 IP configuration
+vpn_ip_prompt() {
+    local ip=$(ip -4 addr show tun0 2>/dev/null | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n1)
+    [[ -n "$ip" ]] && echo "[$ip]"
+}
+
+# Final Prompt Construction
+PROMPT='┌──(%n@%m)-[%~]$(vpn_ip_prompt)
+└─# '
