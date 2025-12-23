@@ -191,8 +191,10 @@ rockyou_download() {
         gunzip "usr/share/wordlists/rockyou.txt.gz"
         log_success "Task Complete: Rockyou unzipped."
     else
-        wget -O "usr/share/wordlists/rockyou.txt" https://github.com/brannondorsey/naive-hashcat/releases/download/data/rockyou.txt
+        wget -O "usr/share/wordlists/rockyou.txt.gz" https://weakpass.com/download/90/rockyou.txt.gz
         log_success "Task Complete: Rockyou downloaded."
+        gunzip "usr/share/wordlists/rockyou.txt.gz"
+        log_success "Task Complete: Rockyou unzipped."
     fi
 }
 
