@@ -252,6 +252,7 @@ main() {
     zsh_plugins
     zshrc_config
     tmux_config
+    tmux_plugins
     shell_setup
     git_install
     openvpn_install
