@@ -218,16 +218,16 @@ openvpn_install() {
 # --- Rockyou Download ---
 rockyou_download() {
     log_info "Downloading Rockyou..."
-    if [ -f "usr/share/wordlists/rockyou.txt" ]; then
+    if [ -f "/usr/share/wordlists/rockyou.txt" ]; then
         log_warn "Rockyou is already downloaded. Skipping..."
-    elif [ -f "usr/share/wordlists/rockyou.txt.gz" ]; then
+    elif [ -f "/usr/share/wordlists/rockyou.txt.gz" ]; then
         log_warn "Rockyou is already downloaded. Unzipping..."
-        gunzip "usr/share/wordlists/rockyou.txt.gz"
+        gunzip "/usr/share/wordlists/rockyou.txt.gz"
         log_success "Task Complete: Rockyou unzipped."
     else
-        wget -O "usr/share/wordlists/rockyou.txt.gz" https://weakpass.com/download/90/rockyou.txt.gz
+        wget -O "/usr/share/wordlists/rockyou.txt.gz" https://weakpass.com/download/90/rockyou.txt.gz
         log_success "Task Complete: Rockyou downloaded."
-        gunzip "usr/share/wordlists/rockyou.txt.gz"
+        gunzip "/usr/share/wordlists/rockyou.txt.gz"
         log_success "Task Complete: Rockyou unzipped."
     fi
 }
