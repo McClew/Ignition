@@ -49,5 +49,5 @@ vpn_ip_prompt() {
 }
 
 # Final Prompt Construction
-#PROMPT='┌──(%n@%m)-[%~]$(vpn_ip_prompt)
-#└─# '
+PROMPT='%F{blue}%~%f %F{yellow}$(vpn_ip_prompt)%f
+%F{blue}>%f '
