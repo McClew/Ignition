@@ -125,11 +125,11 @@ zshrc_config() {
 
     # Back up existing .zshrc
     if [ -f "$HOME/.zshrc" ]; then
-        cp "$HOME/.zshrc" "$HOME/.zshrc.bak.$(date +%F-%T)"
+        sudo cp "$HOME/.zshrc" "$HOME/.zshrc.bak.$(date +%F-%T)"
         log_info "Backed up existing .zshrc"
     fi
 
-    cp "$CONFIG_ZSHRC" "$HOME/.zshrc"
+    sudo cp "$CONFIG_ZSHRC" "$HOME/.zshrc"
 
     log_success "Task Complete: .zshrc copied from configs."
 }
@@ -145,7 +145,7 @@ tmux_config() {
         exit 1
     fi
 
-    cp "$CONFIG_TMUX" "$HOME/.tmux.conf"
+    sudo cp "$CONFIG_TMUX" "$HOME/.tmux.conf"
 
     log_success "Task Complete: .tmux.conf copied from configs."
 }
