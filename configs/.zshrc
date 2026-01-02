@@ -7,12 +7,11 @@ export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="robbyrussell"
 
 # Plugins
-# Standard plugins can be found in $ZSH/plugins/
-# Custom plugins may be added to $ZSH_CUSTOM/plugins/
 plugins=(git eza zsh-autosuggestions grc sudo colorize tmux)
 
 # Colorize style
 zsh_colorize_style="colorful"
+zsh_tmux_autotstart=true
 
 source $ZSH/oh-my-zsh.sh
 
@@ -20,19 +19,12 @@ source $ZSH/oh-my-zsh.sh
 
 # --- Aliases ---
 # Bat (cat replacement)
-# Note: The script ensures 'cat' aliases to the correct binary (bat or batcat)
-# But since this file is copied, we rely on the user or the script to handle binary naming issues.
-# To be safe and dynamic, we can use a conditional alias strategy or just assume 'batcat' on Kali/Debian.
-# Or better, we can alias based on what's available. 
-# However, Zsh rc runs at shell startup. We can check for command existence here.
-
+# Note: Use \cat to use the standard cat command if needed for copying lines.
 if command -v batcat &> /dev/null; then
     alias cat='batcat'
 elif command -v bat &> /dev/null; then
     alias cat='bat'
 fi
-
-# Note: Use \cat to use the standard cat command if needed for copying lines.
 
 # Nmap (colorized)
 alias nmap='grc nmap'
@@ -57,5 +49,5 @@ vpn_ip_prompt() {
 }
 
 # Final Prompt Construction
-PROMPT='┌──(%n@%m)-[%~]$(vpn_ip_prompt)
-└─# '
+#PROMPT='┌──(%n@%m)-[%~]$(vpn_ip_prompt)
+#└─# '
