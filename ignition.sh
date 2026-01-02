@@ -245,13 +245,8 @@ seclists_download() {
 
 # --- Complete Banner ---
 end_banner() {
-    echo ""
     log_success "INSTALLATION COMPLETE!"
-    log_info "Closing terminal... "
-    log_warn "5"
-    sleep 1
-    log_warn "4"
-    sleep 1
+    log_info "Killing tmux server... "
     log_warn "3"
     sleep 1
     log_warn "2"
@@ -259,6 +254,13 @@ end_banner() {
     log_warn "1"
     sleep 1
     tmux kill-server
+    log_info "Closing terminal... "
+    log_warn "3"
+    sleep 1
+    log_warn "2"
+    sleep 1
+    log_warn "1"
+    sleep 1
     exit
 }
 
