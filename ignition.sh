@@ -130,11 +130,11 @@ zshrc_config() {
 
     # Back up existing .zshrc
     if [ -f "${HOME}/.zshrc" ]; then
-        sudo cp --force "${HOME}/.zshrc" "${HOME}/.zshrc.bak.$(date +%F-%T)"
+        cp --force "${HOME}/.zshrc" "${HOME}/.zshrc.bak.$(date +%F-%T)"
         log_info "Backed up existing .zshrc"
     fi
 
-    sudo cp --force "$CONFIG_ZSHRC" "${HOME}/.zshrc"
+    cp --force "$CONFIG_ZSHRC" "${HOME}/.zshrc"
 
     log_success "Task Complete: .zshrc copied from configs."
 }
@@ -150,9 +150,29 @@ tmux_config() {
         exit 1
     fi
 
-    sudo cp --force "$CONFIG_TMUX" "${HOME}/.tmux.conf"
+    cp --force "$CONFIG_TMUX" "${HOME}/.tmux.conf"
 
     log_success "Task Complete: .tmux.conf copied from configs."
+}
+
+# --- TMUX PLugins ---
+tmux_plugins() {
+    log_info "Installing tmux plugins..."
+
+    # Install Tmux Package Manager
+    if [ ! -d "${HOME}/.tmux/plugins/tpm" ]; then
+        git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
+        log_success "tpm plugin installed."
+    else
+        log_warn "tpm already installed. Skipping..."
+    fi
+
+    log_info "Fetching plugins..."
+    tmux start-server
+    "$HOME/.tmux/plugins/tpm/bin/install_plugins"
+    tmux source-file "${HOME}/.tmux.conf"
+
+    log_success "All tmux plugins installed and sourced."
 }
 
 # --- Shell Setup ---
