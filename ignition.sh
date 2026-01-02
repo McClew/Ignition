@@ -238,7 +238,18 @@ seclists_download() {
 end_banner() {
     echo ""
     log_success "INSTALLATION COMPLETE!"
-    echo "Please restart your terminal or log out and back in for all changes to take full effect."
+    log_info "Closing terminal... "
+    log_warn "5"
+    sleep 1
+    log_warn "4"
+    sleep 1
+    log_warn "3"
+    sleep 1
+    log_warn "2"
+    sleep 1
+    log_warn "1"
+    sleep 1
+    tmux kill-server
 }
 
 # --- Main Execution ---
