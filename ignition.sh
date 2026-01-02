@@ -50,6 +50,17 @@ system_prep() {
     log_success "Task Complete: Utility packages installed."
 }
 
+# --- Git Install ---
+git_install() {
+    log_info "Installing Git..."
+    if command -v git &> /dev/null; then
+        log_warn "Git is already installed. Skipping..."
+    else
+        apt install -y git
+        log_success "Task Complete: Git installed."
+    fi
+}
+
 # --- Eza Install ---
 eza_install() {
     if command -v eza &> /dev/null; then
@@ -168,9 +179,18 @@ tmux_plugins() {
     fi
 
     log_info "Fetching plugins..."
-    tmux start-server
-    "$HOME/.tmux/plugins/tpm/bin/install_plugins"
+    
+    # Start a detached session to ensure the server stays alive
+    tmux new-session -d -s "temp_install"
+    
+    # Run the TPM installer
+    "${HOME}/.tmux/plugins/tpm/bin/install_plugins"
+    
+    # Source the config file
     tmux source-file "${HOME}/.tmux.conf"
+    
+    # Kill the temp session
+    tmux kill-session -t "temp_install"
 
     log_success "All tmux plugins installed and sourced."
 }
@@ -180,17 +200,6 @@ shell_setup() {
     log_info "Changing default shell to zsh..."
     chsh -s $(which zsh)
     log_success "Task Complete: Default shell changed to zsh."
-}
-
-# --- Git Install ---
-git_install() {
-    log_info "Installing Git..."
-    if command -v git &> /dev/null; then
-        log_warn "Git is already installed. Skipping..."
-    else
-        apt install -y git
-        log_success "Task Complete: Git installed."
-    fi
 }
 
 # --- OpenVPN Install ---
@@ -250,6 +259,7 @@ end_banner() {
     log_warn "1"
     sleep 1
     tmux kill-server
+    exit
 }
 
 # --- Main Execution ---
@@ -258,6 +268,7 @@ main() {
     banner
     # --- Package Installs ---
     system_prep
+    git_install
     eza_install
     omz_install
     zsh_plugins
@@ -265,7 +276,6 @@ main() {
     tmux_config
     tmux_plugins
     shell_setup
-    git_install
     openvpn_install
     # --- Wordlist Downloads ---
     rockyou_download
