@@ -5,19 +5,24 @@
 
 set -e  # Exit immediately if a command exits with a non-zero status.
 
-# --- Colours for Output ---
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[0;33m'
-NC='\033[0m' # No Colour
+# --- Global Variables ---
+USER="kali"
+HOME="/home/${USER}"
 
+# --- Colours for Output ---
+RED="\033[0;31m"
+GREEN="\033[0;32m"
+BLUE="\033[0;34m"
+YELLOW="\033[0;33m"
+NC="\033[0m" # No Colour
+
+# --- Logging Badges ---
 log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
 log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-# Check for sudo
+# --- Check for sudo ---
 if [ "$EUID" -ne 0 ]; then
   log_error "Please run as root (sudo ./ignition.sh)"
   exit 1
@@ -79,7 +84,7 @@ omz_install() {
     fi
 
     # Check if OMZ is already installed
-    if [ -d "$HOME/.oh-my-zsh" ]; then
+    if [ -d "${HOME}/.oh-my-zsh" ]; then
         log_warn "Oh My Zsh is already installed. Skipping..."
     else
         # Unattended install
@@ -93,7 +98,7 @@ omz_install() {
 zsh_plugins() {
     log_info "Installing Zsh Plugins..."
     
-    ZSH_CUSTOM=${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}
+    ZSH_CUSTOM=${ZSH_CUSTOM:-${HOME}/.oh-my-zsh/custom}
     
     # zsh-autosuggestions
     if [ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]; then
@@ -124,12 +129,12 @@ zshrc_config() {
     fi
 
     # Back up existing .zshrc
-    if [ -f "$HOME/.zshrc" ]; then
-        sudo cp --force "$HOME/.zshrc" "$HOME/.zshrc.bak.$(date +%F-%T)"
+    if [ -f "${HOME}/.zshrc" ]; then
+        sudo cp --force "${HOME}/.zshrc" "${HOME}/.zshrc.bak.$(date +%F-%T)"
         log_info "Backed up existing .zshrc"
     fi
 
-    sudo cp --force "$CONFIG_ZSHRC" "$HOME/.zshrc"
+    sudo cp --force "$CONFIG_ZSHRC" "${HOME}/.zshrc"
 
     log_success "Task Complete: .zshrc copied from configs."
 }
@@ -145,7 +150,7 @@ tmux_config() {
         exit 1
     fi
 
-    sudo cp --force "$CONFIG_TMUX" "$HOME/.tmux.conf"
+    sudo cp --force "$CONFIG_TMUX" "${HOME}/.tmux.conf"
 
     log_success "Task Complete: .tmux.conf copied from configs."
 }
