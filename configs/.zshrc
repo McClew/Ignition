@@ -15,17 +15,6 @@ zsh_tmux_autotstart=true
 
 source $ZSH/oh-my-zsh.sh
 
-# User configuration
-
-# --- Aliases ---
-# Bat (cat replacement)
-# Note: Use \cat to use the standard cat command if needed for copying lines.
-if command -v batcat &> /dev/null; then
-    alias cat='batcat'
-elif command -v bat &> /dev/null; then
-    alias cat='bat'
-fi
-
 # Nmap (colorized)
 alias nmap='grc nmap'
 
