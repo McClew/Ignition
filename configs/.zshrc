@@ -9,13 +9,16 @@ ZSH_THEME="robbyrussell"
 # Plugins
 plugins=(git eza zsh-autosuggestions grc sudo colorize tmux)
 
-# Colorize style
+# Colorise style
 zsh_colorize_style="colorful"
 zsh_tmux_autotstart=true
 
 source $ZSH/oh-my-zsh.sh
 
-# Nmap (colorized)
+# Sudo alias to enable colourisation
+alias sudo='sudo '
+
+# Nmap (colorised)
 alias nmap='grc nmap'
 
 # Eza (ls replacement)
