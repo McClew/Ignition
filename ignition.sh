@@ -213,6 +213,17 @@ openvpn_install() {
     fi
 }
 
+# --- Flameshot Install ---
+flameshot_install() {
+    log_info "Installing Flameshot..."
+    if command -v flameshot &> /dev/null; then
+        log_warn "Flameshot is already installed. Skipping..."
+    else
+        apt install -y flameshot
+        log_success "Task Complete: Flameshot installed."
+    fi
+}
+
 ## --- Wordlist Downloads ---
 
 # --- Rockyou Download ---
@@ -279,6 +290,7 @@ main() {
     tmux_plugins
     shell_setup
     openvpn_install
+    flameshot_install
     # --- Wordlist Downloads ---
     rockyou_download
     seclists_download
