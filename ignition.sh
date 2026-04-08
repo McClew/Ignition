@@ -50,6 +50,26 @@ system_prep() {
     log_success "Task Complete: Utility packages installed."
 }
 
+# --- GRC Configuration Setup ---
+grc_config() {
+    log_info "grc configuration setup..."
+    log_info "Creating required directory..."
+
+    TARGET_DIR="${HOME}/.grc"
+
+    mkdir -p "$TARGET_DIR"
+
+    log_info "Copying configurations..."
+
+    # base grc config
+    cat "configs/grc/grc.conf" >> "$TARGET_DIR/grc.conf"
+
+    # ffuf config
+    cp "conigs/grc/conf.ffuf" "$TARGET_DIR/"
+
+    log_success "Task Complete: grc configuration complete."
+}
+
 # --- Git Install ---
 git_install() {
     log_info "Installing Git..."
@@ -281,6 +301,7 @@ main() {
     banner
     # --- Package Installs ---
     system_prep
+    grc_config
     git_install
     eza_install
     omz_install

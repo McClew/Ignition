@@ -1,0 +1,30 @@
+# Status 200 (Success)
+regexp=\[Status: 200,.*\]
+colours=bold green
+count=more
+=======
+# Status 301/302 (Redirects)
+regexp=\[Status: 30[12],.*\]
+colours=yellow
+count=more
+=======
+# Status 403/401 (Forbidden/Unauthorized)
+regexp=\[Status: 40[13],.*\]
+colours=bold red
+count=more
+=======
+# Status 500 (Server Errors)
+regexp=\[Status: 500,.*\]
+colours=on_red white
+count=more
+=======
+# Highlight the Payload/Fuzz word
+# Matches the text between the double colons
+regexp=::\s+(.*)\s+::
+colours=default, bold cyan
+count=more
+=======
+# Highlight Response Size
+regexp=Size: \d+
+colours=magenta
+count=more

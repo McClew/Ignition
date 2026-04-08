@@ -18,8 +18,9 @@ source $ZSH/oh-my-zsh.sh
 # Sudo alias to enable colourisation
 alias sudo='sudo '
 
-# Nmap (colorised)
+# Program Colourisation
 alias nmap='grc nmap'
+alias ffuf='grc ffuf'
 
 # Eza (ls replacement)
 alias ls='eza --color=always --group-directories-first'
