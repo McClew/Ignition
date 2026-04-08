@@ -65,7 +65,7 @@ grc_config() {
     cat "configs/grc/grc.conf" >> "$TARGET_DIR/grc.conf"
 
     # ffuf config
-    cp "conigs/grc/conf.ffuf" "$TARGET_DIR/"
+    cp "configs/grc/conf.ffuf" "$TARGET_DIR/"
 
     log_success "Task Complete: grc configuration complete."
 }
