@@ -8,6 +8,7 @@ set -e  # Exit immediately if a command exits with a non-zero status.
 # --- Global Variables ---
 USER="kali"
 HOME="/home/${USER}"
+NEO4J_PASS="bloodhound"
 
 # --- Colours for Output ---
 RED="\033[0;31m"
@@ -244,6 +245,68 @@ flameshot_install() {
     fi
 }
 
+# --- Bloodhound Install ---
+bloodhound_install() {
+    log_info "Installing Bloodhound..."
+    if command -v bloodhound &> /dev/null; then
+        log_warn "Bloodhound is already installed. Skipping..."
+    else
+        apt install -y bloodhound
+        log_success "Task Complete: Bloodhound installed."
+    fi
+}
+
+# --- Bloodhound Setup ---
+bloodhound_setup() {
+    log_info "Bloodhound setup..."
+
+    # Neo4j must be running to change the default credentials
+    log_info "Starting neo4j (first start initialises the database and is slow)..."
+    systemctl start neo4j
+
+    log_info "Waiting for neo4j to be ready..."
+    for i in $(seq 1 36); do
+        if curl -s -o /dev/null http://localhost:7474; then
+            break
+        fi
+        if [ "$i" -eq 36 ]; then
+            log_error "Timed out waiting for neo4j."
+            exit 1
+        fi
+        sleep 5
+    done
+
+    # Change default neo4j credentials (a 401 means they have already been changed)
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -u neo4j:neo4j \
+        -H "Content-Type: application/json" \
+        -X POST http://localhost:7474/user/neo4j/password \
+        -d "{\"password\":\"${NEO4J_PASS}\"}")
+
+    if [ "$HTTP_CODE" = "200" ]; then
+        log_info "neo4j password changed."
+    elif [ "$HTTP_CODE" = "401" ]; then
+        log_warn "neo4j password already changed. Skipping..."
+    else
+        log_error "Failed to change neo4j password (HTTP ${HTTP_CODE})."
+        exit 1
+    fi
+
+    # Credentials are already set, so answer any prompts with enter
+    printf '\n\n\n' | bloodhound-setup
+
+    # Reflect the new neo4j password in the bhapi config (neo4j block only)
+    log_info "Updating /etc/bhapi/bhapi.json..."
+    sed -i '/"neo4j": {/,/}/ s/"secret": "[^"]*"/"secret": "'"${NEO4J_PASS}"'"/' /etc/bhapi/bhapi.json
+
+    if ! grep -A4 '"neo4j": {' /etc/bhapi/bhapi.json | grep -q "\"secret\": \"${NEO4J_PASS}\""; then
+        log_error "Failed to update neo4j secret in /etc/bhapi/bhapi.json."
+        exit 1
+    fi
+
+    log_success "Task Complete: Bloodhound installed and configured."
+    log_info "Neo4j password: ${NEO4J_PASS} | Bloodhound login: admin / admin"
+}
+
 ## --- Wordlist Downloads ---
 
 # --- Rockyou Download ---
@@ -312,6 +375,8 @@ main() {
     shell_setup
     openvpn_install
     flameshot_install
+    bloodhound_install
+    bloodhound_setup
     # --- Wordlist Downloads ---
     rockyou_download
     seclists_download
