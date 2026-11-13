@@ -51,6 +51,17 @@ system_prep() {
     log_success "Task Complete: Utility packages installed."
 }
 
+# --- Timezone & Keyboard Layout ---
+locale_config() {
+    log_info "Setting timezone and keyboard layout (UK)..."
+
+    timedatectl set-timezone Europe/London
+    localectl set-keymap gb
+    localectl set-x11-keymap gb
+
+    log_success "Task Complete: Timezone set to Europe/London and keyboard layout set to gb."
+}
+
 # --- GRC Configuration Setup ---
 grc_config() {
     log_info "grc configuration setup..."
@@ -245,6 +256,50 @@ flameshot_install() {
     fi
 }
 
+# --- Pentest Packages Install ---
+pentest_packages_install() {
+    log_info "Installing pentest packages (gobuster, feroxbuster, netexec, bloodyad, certipy-ad, evil-winrm, impacket-scripts)..."
+    apt install -y gobuster feroxbuster netexec bloodyad certipy-ad evil-winrm impacket-scripts
+
+    log_success "Task Complete: Pentest packages installed."
+}
+
+# --- Go Tools Install ---
+go_tool_install() {
+    # $1 = binary name, $2 = go module path
+    if command -v "$1" &> /dev/null; then
+        log_warn "$1 is already installed. Skipping..."
+    else
+        GOPATH=/opt/go GOBIN=/usr/local/bin go install "$2@latest"
+        log_success "Task Complete: $1 installed."
+    fi
+}
+
+go_tools_install() {
+    log_info "Installing Go tools (ligolo-ng, chisel, kerbrute, ffuf)..."
+
+    if ! command -v go &> /dev/null; then
+        apt install -y golang-go
+    fi
+
+    go_tool_install chisel github.com/jpillora/chisel
+    go_tool_install kerbrute github.com/ropnop/kerbrute
+    go_tool_install ffuf github.com/ffuf/ffuf/v2
+
+    # ligolo-ng binaries are named agent and proxy, so install and rename them
+    if command -v ligolo-proxy &> /dev/null && command -v ligolo-agent &> /dev/null; then
+        log_warn "ligolo-ng is already installed. Skipping..."
+    else
+        GOPATH=/opt/go GOBIN=/opt/go/ligolo go install github.com/nicocha30/ligolo-ng/cmd/proxy@latest
+        GOPATH=/opt/go GOBIN=/opt/go/ligolo go install github.com/nicocha30/ligolo-ng/cmd/agent@latest
+        mv /opt/go/ligolo/proxy /usr/local/bin/ligolo-proxy
+        mv /opt/go/ligolo/agent /usr/local/bin/ligolo-agent
+        log_success "Task Complete: ligolo-ng installed."
+    fi
+
+    log_success "Task Complete: Go tools installed."
+}
+
 # --- Bloodhound Install ---
 bloodhound_install() {
     log_info "Installing Bloodhound..."
@@ -326,14 +381,42 @@ rockyou_download() {
     fi
 }
 
-# --- SecLists Download ---
-seclists_download() {
-    log_info "Downloading SecLists..."
-    if [ -d "/usr/share/wordlists/SecLists" ]; then
-        log_warn "SecLists is already downloaded. Skipping..."
+# --- Seclists Install ---
+seclists_install() {
+    log_info "Installing Seclists..."
+    apt install -y seclists
+
+    # Ensure seclists is linked within /usr/share/wordlists
+    if [ -e "/usr/share/wordlists/seclists" ] || [ -L "/usr/share/wordlists/seclists" ]; then
+        log_warn "SecLists is already linked in /usr/share/wordlists. Skipping..."
     else
-        git clone https://github.com/danielmiessler/SecLists.git /usr/share/wordlists/SecLists
-        log_success "Task Complete: SecLists downloaded."
+        mkdir -p /usr/share/wordlists
+        ln -s /usr/share/seclists /usr/share/wordlists/seclists
+        log_success "SecLists linked to /usr/share/wordlists/seclists."
+    fi
+
+    log_success "Task Complete: Seclists installed."
+}
+
+# --- Jhaddix All Download ---
+jhaddix_download() {
+    log_info "Downloading Jhaddix all.txt..."
+    if [ -f "/usr/share/wordlists/jhaddix-all.txt" ]; then
+        log_warn "Jhaddix all.txt is already downloaded. Skipping..."
+    else
+        wget -O "/usr/share/wordlists/jhaddix-all.txt" https://gist.githubusercontent.com/jhaddix/86a06c5dc309d08580a018c66354a056/raw/all.txt
+        log_success "Task Complete: Jhaddix all.txt downloaded."
+    fi
+}
+
+# --- Statistically Likely Usernames Download ---
+usernames_download() {
+    log_info "Downloading Statistically Likely Usernames..."
+    if [ -d "/usr/share/wordlists/statistically-likely-usernames" ]; then
+        log_warn "Statistically Likely Usernames is already downloaded. Skipping..."
+    else
+        git clone https://github.com/insidetrust/statistically-likely-usernames.git /usr/share/wordlists/statistically-likely-usernames
+        log_success "Task Complete: Statistically Likely Usernames downloaded."
     fi
 }
 
@@ -364,6 +447,7 @@ main() {
     banner
     # --- Package Installs ---
     system_prep
+    locale_config
     grc_config
     git_install
     eza_install
@@ -375,11 +459,15 @@ main() {
     shell_setup
     openvpn_install
     flameshot_install
+    pentest_packages_install
+    go_tools_install
     bloodhound_install
     bloodhound_setup
     # --- Wordlist Downloads ---
     rockyou_download
-    seclists_download
+    seclists_install
+    jhaddix_download
+    usernames_download
     # --- Complete Banner ---
     end_banner
 }
